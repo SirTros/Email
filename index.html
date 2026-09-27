@@ -1,0 +1,1451 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>SirTros Mail</title>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+  <style>
+    * {
+      box-sizing: border-box;
+    }
+
+    :root {
+      --bg: #090a0d;
+      --panel: #111318;
+      --panel2: #171920;
+      --panel3: #1d2028;
+      --border: #292d37;
+      --text: #f4f5f7;
+      --muted: #9da3ae;
+      --accent: #7c5cff;
+      --accent2: #987fff;
+      --danger: #ff5d67;
+      --success: #50d890;
+      --shadow: 0 20px 60px rgba(0,0,0,.4);
+    }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      background:
+        radial-gradient(circle at top left, rgba(124,92,255,.12), transparent 30%),
+        radial-gradient(circle at bottom right, rgba(70,120,255,.08), transparent 30%),
+        var(--bg);
+      color: var(--text);
+      font-family: Arial, Helvetica, sans-serif;
+    }
+
+    button,
+    input,
+    textarea {
+      font: inherit;
+    }
+
+    button {
+      cursor: pointer;
+    }
+
+    .hidden {
+      display: none !important;
+    }
+
+    /* LOGIN */
+
+    #authScreen {
+      min-height: 100vh;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      padding: 20px;
+    }
+
+    .authBox {
+      width: 100%;
+      max-width: 430px;
+      background: rgba(17,19,24,.94);
+      border: 1px solid var(--border);
+      border-radius: 28px;
+      padding: 32px;
+      box-shadow: var(--shadow);
+      backdrop-filter: blur(20px);
+    }
+
+    .logo {
+      width: 62px;
+      height: 62px;
+      border-radius: 20px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: linear-gradient(135deg, var(--accent), #4f8cff);
+      font-size: 30px;
+      font-weight: 900;
+      margin-bottom: 20px;
+      box-shadow: 0 10px 30px rgba(124,92,255,.25);
+    }
+
+    .authBox h1 {
+      margin: 0 0 8px;
+      font-size: 29px;
+    }
+
+    .authBox p {
+      color: var(--muted);
+      margin: 0 0 25px;
+    }
+
+    .field {
+      margin-bottom: 14px;
+    }
+
+    .field label {
+      display: block;
+      color: var(--muted);
+      font-size: 13px;
+      margin: 0 0 7px 4px;
+    }
+
+    input,
+    textarea {
+      width: 100%;
+      border: 1px solid var(--border);
+      background: var(--panel2);
+      color: var(--text);
+      outline: none;
+      border-radius: 15px;
+      padding: 13px 15px;
+      transition: .2s;
+    }
+
+    input:focus,
+    textarea:focus {
+      border-color: var(--accent);
+      box-shadow: 0 0 0 3px rgba(124,92,255,.12);
+    }
+
+    .primary {
+      width: 100%;
+      border: 0;
+      border-radius: 15px;
+      padding: 14px;
+      color: white;
+      font-weight: 800;
+      background: linear-gradient(135deg, var(--accent), var(--accent2));
+      margin-top: 5px;
+    }
+
+    .primary:hover {
+      filter: brightness(1.08);
+    }
+
+    .switch {
+      margin-top: 18px;
+      text-align: center;
+      color: var(--muted);
+      font-size: 14px;
+    }
+
+    .switch button {
+      border: 0;
+      background: none;
+      color: var(--accent2);
+      font-weight: 700;
+    }
+
+    .error {
+      min-height: 20px;
+      color: var(--danger);
+      font-size: 13px;
+      margin: 10px 2px;
+    }
+
+    /* APP */
+
+    #app {
+      min-height: 100vh;
+      display: flex;
+    }
+
+    .sidebar {
+      width: 255px;
+      min-width: 255px;
+      border-right: 1px solid var(--border);
+      background: rgba(13,15,20,.95);
+      padding: 18px;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      font-size: 20px;
+      font-weight: 900;
+      padding: 10px 8px 24px;
+    }
+
+    .brandIcon {
+      width: 38px;
+      height: 38px;
+      border-radius: 12px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: linear-gradient(135deg, var(--accent), #4f8cff);
+    }
+
+    .compose {
+      width: 100%;
+      border: 0;
+      border-radius: 17px;
+      padding: 14px;
+      color: white;
+      background: linear-gradient(135deg, var(--accent), var(--accent2));
+      font-weight: 800;
+      margin-bottom: 18px;
+    }
+
+    .nav {
+      display: flex;
+      flex-direction: column;
+      gap: 5px;
+    }
+
+    .nav button {
+      border: 0;
+      background: transparent;
+      color: var(--muted);
+      border-radius: 13px;
+      padding: 12px 13px;
+      text-align: left;
+      font-weight: 700;
+    }
+
+    .nav button:hover,
+    .nav button.active {
+      background: var(--panel2);
+      color: white;
+    }
+
+    .nav button span {
+      display: inline-block;
+      width: 25px;
+    }
+
+    .userBox {
+      margin-top: auto;
+      border-top: 1px solid var(--border);
+      padding-top: 15px;
+    }
+
+    .userName {
+      font-weight: 800;
+      font-size: 14px;
+    }
+
+    .userEmail {
+      color: var(--muted);
+      font-size: 12px;
+      margin: 3px 0 12px;
+      word-break: break-all;
+    }
+
+    .logout {
+      width: 100%;
+      border: 1px solid var(--border);
+      background: var(--panel2);
+      color: var(--text);
+      border-radius: 12px;
+      padding: 10px;
+    }
+
+    .main {
+      flex: 1;
+      min-width: 0;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .topbar {
+      height: 72px;
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 12px 20px;
+    }
+
+    .search {
+      flex: 1;
+      position: relative;
+    }
+
+    .search input {
+      padding-left: 43px;
+      border-radius: 15px;
+    }
+
+    .searchIcon {
+      position: absolute;
+      left: 15px;
+      top: 50%;
+      transform: translateY(-50%);
+      color: var(--muted);
+    }
+
+    .refresh {
+      border: 1px solid var(--border);
+      background: var(--panel2);
+      color: white;
+      border-radius: 13px;
+      width: 43px;
+      height: 43px;
+      font-size: 18px;
+    }
+
+    .content {
+      flex: 1;
+      padding: 18px;
+      min-width: 0;
+    }
+
+    .toolbar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 15px;
+    }
+
+    .title {
+      font-size: 23px;
+      font-weight: 900;
+    }
+
+    .count {
+      color: var(--muted);
+      font-size: 13px;
+      margin-top: 3px;
+    }
+
+    .mailList {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+
+    .mail {
+      display: grid;
+      grid-template-columns: 35px 190px 1fr 100px;
+      align-items: center;
+      gap: 10px;
+      min-height: 65px;
+      padding: 10px 14px;
+      background: rgba(17,19,24,.85);
+      border: 1px solid transparent;
+      border-radius: 15px;
+      transition: .15s;
+    }
+
+    .mail:hover {
+      background: var(--panel2);
+      border-color: var(--border);
+    }
+
+    .mail.unread {
+      background: #171923;
+    }
+
+    .star {
+      border: 0;
+      background: none;
+      color: #626873;
+      font-size: 20px;
+    }
+
+    .star.active {
+      color: #ffd34e;
+    }
+
+    .sender {
+      font-weight: 800;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .subjectLine {
+      display: flex;
+      gap: 8px;
+      min-width: 0;
+      cursor: pointer;
+    }
+
+    .subject {
+      font-weight: 700;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .preview {
+      color: var(--muted);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .date {
+      text-align: right;
+      color: var(--muted);
+      font-size: 12px;
+    }
+
+    .empty {
+      padding: 80px 20px;
+      text-align: center;
+      color: var(--muted);
+    }
+
+    /* READER */
+
+    .reader {
+      background: var(--panel);
+      border: 1px solid var(--border);
+      border-radius: 20px;
+      overflow: hidden;
+    }
+
+    .readerTop {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 13px;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .readerTop button {
+      border: 0;
+      background: var(--panel2);
+      color: white;
+      border-radius: 11px;
+      width: 40px;
+      height: 40px;
+    }
+
+    .readerBody {
+      padding: 25px;
+    }
+
+    .readerSubject {
+      font-size: 27px;
+      font-weight: 900;
+      margin-bottom: 22px;
+    }
+
+    .from {
+      color: var(--muted);
+      margin-bottom: 25px;
+    }
+
+    .from strong {
+      color: white;
+    }
+
+    .body {
+      white-space: pre-wrap;
+      line-height: 1.65;
+      font-size: 15px;
+    }
+
+    /* COMPOSE */
+
+    .composeBox {
+      max-width: 800px;
+      margin: auto;
+      background: var(--panel);
+      border: 1px solid var(--border);
+      border-radius: 22px;
+      overflow: hidden;
+    }
+
+    .composeHeader {
+      padding: 18px;
+      font-size: 19px;
+      font-weight: 900;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .composeBody {
+      padding: 18px;
+    }
+
+    .composeBody input,
+    .composeBody textarea {
+      margin-bottom: 10px;
+    }
+
+    .composeBody textarea {
+      min-height: 320px;
+      resize: vertical;
+    }
+
+    .composeBottom {
+      display: flex;
+      justify-content: space-between;
+      gap: 10px;
+    }
+
+    .secondary {
+      border: 1px solid var(--border);
+      background: var(--panel2);
+      color: white;
+      border-radius: 13px;
+      padding: 11px 17px;
+    }
+
+    .send {
+      border: 0;
+      background: var(--accent);
+      color: white;
+      border-radius: 13px;
+      padding: 11px 20px;
+      font-weight: 800;
+    }
+
+    .status {
+      position: fixed;
+      right: 20px;
+      bottom: 20px;
+      max-width: 330px;
+      background: var(--panel3);
+      border: 1px solid var(--border);
+      box-shadow: var(--shadow);
+      border-radius: 14px;
+      padding: 13px 16px;
+      z-index: 50;
+    }
+
+    /* MOBILE */
+
+    @media (max-width: 800px) {
+      .sidebar {
+        width: 72px;
+        min-width: 72px;
+        padding: 10px;
+      }
+
+      .brandText,
+      .composeText,
+      .navText,
+      .userBox {
+        display: none;
+      }
+
+      .brand {
+        justify-content: center;
+      }
+
+      .compose {
+        font-size: 0;
+      }
+
+      .compose::after {
+        content: "+";
+        font-size: 24px;
+      }
+
+      .nav button {
+        text-align: center;
+        font-size: 20px;
+      }
+
+      .nav button span {
+        width: auto;
+      }
+
+      .mail {
+        grid-template-columns: 30px 1fr 60px;
+      }
+
+      .sender {
+        display: none;
+      }
+
+      .subjectLine {
+        display: block;
+      }
+
+      .preview {
+        display: block;
+        font-size: 12px;
+        margin-top: 3px;
+      }
+
+      .topbar {
+        padding: 10px;
+      }
+
+      .content {
+        padding: 10px;
+      }
+    }
+  </style>
+</head>
+
+<body>
+
+  <!-- AUTH -->
+
+  <section id="authScreen">
+    <div class="authBox">
+
+      <div class="logo">✉</div>
+
+      <h1 id="authTitle">Přihlášení</h1>
+      <p id="authSubtitle">Přihlas se do svého SirTros Mail účtu.</p>
+
+      <div id="nameField" class="field hidden">
+        <label>Jméno</label>
+        <input id="nameInput" type="text" placeholder="Tvoje jméno">
+      </div>
+
+      <div class="field">
+        <label>E-mail</label>
+        <input id="emailInput" type="email" placeholder="např. sirtros@example.cz">
+      </div>
+
+      <div class="field">
+        <label>Heslo</label>
+        <input id="passwordInput" type="password" placeholder="Heslo">
+      </div>
+
+      <div id="authError" class="error"></div>
+
+      <button id="authButton" class="primary">Přihlásit se</button>
+
+      <div class="switch">
+        <span id="switchText">Nemáš účet?</span>
+        <button id="switchButton">Vytvořit účet</button>
+      </div>
+
+    </div>
+  </section>
+
+
+  <!-- APP -->
+
+  <section id="app" class="hidden">
+
+    <aside class="sidebar">
+
+      <div class="brand">
+        <div class="brandIcon">✉</div>
+        <span class="brandText">SirTros Mail</span>
+      </div>
+
+      <button class="compose" onclick="openCompose()">
+        <span class="composeText">＋ Napsat e-mail</span>
+      </button>
+
+      <nav class="nav">
+
+        <button id="nav-inbox" class="active" onclick="showFolder('inbox')">
+          <span>📥</span>
+          <span class="navText">Doručené</span>
+        </button>
+
+        <button id="nav-starred" onclick="showFolder('starred')">
+          <span>⭐</span>
+          <span class="navText">S hvězdičkou</span>
+        </button>
+
+        <button id="nav-sent" onclick="showFolder('sent')">
+          <span>📤</span>
+          <span class="navText">Odeslané</span>
+        </button>
+
+        <button id="nav-drafts" onclick="showFolder('drafts')">
+          <span>📝</span>
+          <span class="navText">Koncepty</span>
+        </button>
+
+        <button id="nav-archive" onclick="showFolder('archive')">
+          <span>📦</span>
+          <span class="navText">Archiv</span>
+        </button>
+
+        <button id="nav-spam" onclick="showFolder('spam')">
+          <span>⚠️</span>
+          <span class="navText">Spam</span>
+        </button>
+
+        <button id="nav-trash" onclick="showFolder('trash')">
+          <span>🗑️</span>
+          <span class="navText">Koš</span>
+        </button>
+
+      </nav>
+
+      <div class="userBox">
+        <div class="userName" id="userName"></div>
+        <div class="userEmail" id="userEmail"></div>
+        <button class="logout" onclick="logout()">Odhlásit</button>
+      </div>
+
+    </aside>
+
+
+    <main class="main">
+
+      <header class="topbar">
+
+        <div class="search">
+          <span class="searchIcon">🔎</span>
+          <input
+            id="searchInput"
+            type="search"
+            placeholder="Hledat v poště..."
+            oninput="searchMails()"
+          >
+        </div>
+
+        <button class="refresh" onclick="loadMails()">↻</button>
+
+      </header>
+
+
+      <div id="content" class="content"></div>
+
+    </main>
+
+  </section>
+
+
+  <div id="status" class="status hidden"></div>
+
+
+<script>
+  const SUPABASE_URL = "https://oxfviwqkxtpxjjnogdhh.supabase.co";
+  const SUPABASE_KEY = "sb_publishable_hkaAJrtiV_Isz6BzxAPHtA_hZfFDEYX";
+
+  const supabaseClient = window.supabase.createClient(
+    SUPABASE_URL,
+    SUPABASE_KEY
+  );
+
+  let sessionToken = localStorage.getItem("sirtros_mail_token");
+  let currentUser = null;
+  let currentFolder = "inbox";
+  let currentMails = [];
+  let searchTimer = null;
+  let authMode = "login";
+
+
+  const $ = id => document.getElementById(id);
+
+
+  function showStatus(message) {
+    const box = $("status");
+
+    box.textContent = message;
+    box.classList.remove("hidden");
+
+    setTimeout(() => {
+      box.classList.add("hidden");
+    }, 2800);
+  }
+
+
+  function getError(error) {
+    if (!error) return "Neznámá chyba.";
+
+    let msg = error.message || String(error);
+
+    msg = msg.replace(/^.*?:\s*/, "");
+
+    return msg;
+  }
+
+
+  async function rpc(name, args = {}) {
+    const { data, error } =
+      await supabaseClient.rpc(name, args);
+
+    if (error) {
+      throw error;
+    }
+
+    return data;
+  }
+
+
+  function setAuthMode(mode) {
+    authMode = mode;
+
+    $("authError").textContent = "";
+
+    if (mode === "login") {
+
+      $("authTitle").textContent = "Přihlášení";
+      $("authSubtitle").textContent =
+        "Přihlas se do svého SirTros Mail účtu.";
+
+      $("nameField").classList.add("hidden");
+
+      $("authButton").textContent = "Přihlásit se";
+
+      $("switchText").textContent = "Nemáš účet?";
+      $("switchButton").textContent = "Vytvořit účet";
+
+    } else {
+
+      $("authTitle").textContent = "Vytvořit účet";
+      $("authSubtitle").textContent =
+        "Vytvoř si účet přímo v databázi SirTros Mail.";
+
+      $("nameField").classList.remove("hidden");
+
+      $("authButton").textContent = "Vytvořit účet";
+
+      $("switchText").textContent = "Už máš účet?";
+      $("switchButton").textContent = "Přihlásit se";
+    }
+  }
+
+
+  $("switchButton").onclick = () => {
+    setAuthMode(authMode === "login" ? "register" : "login");
+  };
+
+
+  $("authButton").onclick = authenticate;
+
+
+  $("passwordInput").addEventListener("keydown", e => {
+    if (e.key === "Enter") authenticate();
+  });
+
+
+  async function authenticate() {
+
+    $("authError").textContent = "";
+
+    const email =
+      $("emailInput").value.trim().toLowerCase();
+
+    const password =
+      $("passwordInput").value;
+
+    if (!email || !password) {
+      $("authError").textContent =
+        "Vyplň e-mail a heslo.";
+      return;
+    }
+
+    $("authButton").disabled = true;
+
+    try {
+
+      let result;
+
+      if (authMode === "login") {
+
+        result = await rpc("mail_login", {
+          p_email: email,
+          p_password: password
+        });
+
+      } else {
+
+        const name =
+          $("nameInput").value.trim();
+
+        if (!name) {
+          throw new Error("Zadej jméno.");
+        }
+
+        result = await rpc("mail_register", {
+          p_name: name,
+          p_email: email,
+          p_password: password
+        });
+      }
+
+      sessionToken = result.token;
+      currentUser = result.user;
+
+      localStorage.setItem(
+        "sirtros_mail_token",
+        sessionToken
+      );
+
+      openApp();
+
+    } catch (error) {
+
+      $("authError").textContent =
+        getError(error);
+
+    } finally {
+
+      $("authButton").disabled = false;
+    }
+  }
+
+
+  async function checkSession() {
+
+    if (!sessionToken) {
+      showAuth();
+      return;
+    }
+
+    try {
+
+      currentUser = await rpc("mail_me", {
+        p_token: sessionToken
+      });
+
+      openApp();
+
+    } catch {
+
+      localStorage.removeItem("sirtros_mail_token");
+
+      sessionToken = null;
+      currentUser = null;
+
+      showAuth();
+    }
+  }
+
+
+  function showAuth() {
+
+    $("authScreen").classList.remove("hidden");
+    $("app").classList.add("hidden");
+  }
+
+
+  function openApp() {
+
+    $("authScreen").classList.add("hidden");
+    $("app").classList.remove("hidden");
+
+    $("userName").textContent =
+      currentUser.display_name;
+
+    $("userEmail").textContent =
+      currentUser.email;
+
+    showFolder("inbox");
+  }
+
+
+  async function logout() {
+
+    try {
+
+      if (sessionToken) {
+        await rpc("mail_logout", {
+          p_token: sessionToken
+        });
+      }
+
+    } catch {}
+
+    localStorage.removeItem("sirtros_mail_token");
+
+    sessionToken = null;
+    currentUser = null;
+
+    showAuth();
+
+    $("emailInput").value = "";
+    $("passwordInput").value = "";
+    $("nameInput").value = "";
+  }
+
+
+  function setActiveNav(folder) {
+
+    document
+      .querySelectorAll(".nav button")
+      .forEach(button => {
+        button.classList.remove("active");
+      });
+
+    const button = $("nav-" + folder);
+
+    if (button) {
+      button.classList.add("active");
+    }
+  }
+
+
+  async function showFolder(folder) {
+
+    currentFolder = folder;
+
+    setActiveNav(folder);
+
+    await loadMails();
+  }
+
+
+  async function loadMails() {
+
+    if (!sessionToken) return;
+
+    $("content").innerHTML = `
+      <div class="empty">
+        Načítám poštu…
+      </div>
+    `;
+
+    const search =
+      $("searchInput").value.trim();
+
+    try {
+
+      const result = await rpc("mail_list_emails", {
+        p_token: sessionToken,
+        p_folder: currentFolder,
+        p_search: search
+      });
+
+      currentMails = Array.isArray(result)
+        ? result
+        : [];
+
+      renderMails();
+
+    } catch (error) {
+
+      $("content").innerHTML = `
+        <div class="empty">
+          Nepodařilo se načíst poštu.<br><br>
+          ${escapeHtml(getError(error))}
+        </div>
+      `;
+    }
+  }
+
+
+  function searchMails() {
+
+    clearTimeout(searchTimer);
+
+    searchTimer = setTimeout(() => {
+      loadMails();
+    }, 250);
+  }
+
+
+  function folderTitle(folder) {
+
+    const titles = {
+      inbox: "Doručené",
+      starred: "S hvězdičkou",
+      sent: "Odeslané",
+      drafts: "Koncepty",
+      archive: "Archiv",
+      spam: "Spam",
+      trash: "Koš"
+    };
+
+    return titles[folder] || "Pošta";
+  }
+
+
+  function renderMails() {
+
+    let html = `
+      <div class="toolbar">
+        <div>
+          <div class="title">${folderTitle(currentFolder)}</div>
+          <div class="count">${currentMails.length} zpráv</div>
+        </div>
+      </div>
+    `;
+
+    if (!currentMails.length) {
+
+      html += `
+        <div class="empty">
+          <div style="font-size:42px;margin-bottom:12px;">📭</div>
+          Tady zatím nic není.
+        </div>
+      `;
+
+      $("content").innerHTML = html;
+      return;
+    }
+
+    html += `<div class="mailList">`;
+
+    for (const mail of currentMails) {
+
+      const unread =
+        !mail.is_read &&
+        currentFolder === "inbox";
+
+      const sender =
+        currentFolder === "sent"
+          ? mail.recipient_email
+          : mail.sender_email;
+
+      const date =
+        mail.sent_at ||
+        mail.received_at ||
+        mail.created_at;
+
+      html += `
+        <div class="mail ${unread ? "unread" : ""}">
+
+          <button
+            class="star ${mail.is_starred ? "active" : ""}"
+            onclick="toggleStar('${mail.id}', ${!mail.is_starred})"
+            title="Hvězdička"
+          >
+            ${mail.is_starred ? "★" : "☆"}
+          </button>
+
+          <div
+            class="sender"
+            onclick="openMail('${mail.id}')"
+          >
+            ${escapeHtml(sender || "")}
+          </div>
+
+          <div
+            class="subjectLine"
+            onclick="openMail('${mail.id}')"
+          >
+            <span class="subject">
+              ${escapeHtml(mail.subject || "(bez předmětu)")}
+            </span>
+
+            <span class="preview">
+              — ${escapeHtml((mail.body_text || "").replace(/\n/g, " ").slice(0,120))}
+            </span>
+          </div>
+
+          <div class="date">
+            ${formatDate(date)}
+          </div>
+
+        </div>
+      `;
+    }
+
+    html += `</div>`;
+
+    $("content").innerHTML = html;
+  }
+
+
+  async function toggleStar(id, value) {
+
+    try {
+
+      await rpc("mail_update_email", {
+        p_token: sessionToken,
+        p_id: id,
+        p_is_read: null,
+        p_is_starred: value,
+        p_folder: null
+      });
+
+      await loadMails();
+
+    } catch (error) {
+
+      showStatus(getError(error));
+    }
+  }
+
+
+  async function openMail(id) {
+
+    try {
+
+      const mail =
+        await rpc("mail_get_email", {
+          p_token: sessionToken,
+          p_id: id
+        });
+
+      if (!mail.is_read) {
+
+        await rpc("mail_update_email", {
+          p_token: sessionToken,
+          p_id: id,
+          p_is_read: true,
+          p_is_starred: null,
+          p_folder: null
+        });
+
+        mail.is_read = true;
+      }
+
+      renderReader(mail);
+
+    } catch (error) {
+
+      showStatus(getError(error));
+    }
+  }
+
+
+  function renderReader(mail) {
+
+    const sender =
+      escapeHtml(mail.sender_email || "");
+
+    const recipient =
+      escapeHtml(mail.recipient_email || "");
+
+    $("content").innerHTML = `
+
+      <div class="reader">
+
+        <div class="readerTop">
+
+          <button onclick="loadMails()">
+            ←
+          </button>
+
+          <button
+            onclick="deleteMail('${mail.id}')"
+            title="Smazat"
+          >
+            🗑
+          </button>
+
+          <button
+            onclick="toggleStar('${mail.id}', ${!mail.is_starred})"
+          >
+            ${mail.is_starred ? "★" : "☆"}
+          </button>
+
+        </div>
+
+        <div class="readerBody">
+
+          <div class="readerSubject">
+            ${escapeHtml(mail.subject || "(bez předmětu)")}
+          </div>
+
+          <div class="from">
+            Od: <strong>${sender}</strong><br>
+            Komu: <strong>${recipient}</strong><br>
+            ${formatDate(mail.sent_at || mail.received_at || mail.created_at)}
+          </div>
+
+          <div class="body">
+            ${escapeHtml(mail.body_text || "")}
+          </div>
+
+        </div>
+
+      </div>
+    `;
+  }
+
+
+  async function deleteMail(id) {
+
+    try {
+
+      await rpc("mail_delete_email", {
+        p_token: sessionToken,
+        p_id: id
+      });
+
+      showStatus("E-mail přesunut do koše.");
+
+      await loadMails();
+
+    } catch (error) {
+
+      showStatus(getError(error));
+    }
+  }
+
+
+  function openCompose() {
+
+    $("content").innerHTML = `
+
+      <div class="composeBox">
+
+        <div class="composeHeader">
+          ✉️ Nový e-mail
+        </div>
+
+        <div class="composeBody">
+
+          <input
+            id="composeTo"
+            type="email"
+            placeholder="Komu"
+          >
+
+          <input
+            id="composeSubject"
+            type="text"
+            placeholder="Předmět"
+          >
+
+          <textarea
+            id="composeBody"
+            placeholder="Napiš zprávu..."
+          ></textarea>
+
+          <div class="composeBottom">
+
+            <button
+              class="secondary"
+              onclick="saveDraft()"
+            >
+              Uložit koncept
+            </button>
+
+            <button
+              class="send"
+              onclick="sendMail()"
+            >
+              Odeslat
+            </button>
+
+          </div>
+
+        </div>
+
+      </div>
+    `;
+  }
+
+
+  async function saveDraft() {
+
+    const to =
+      $("composeTo").value.trim();
+
+    const subject =
+      $("composeSubject").value.trim();
+
+    const body =
+      $("composeBody").value;
+
+    try {
+
+      await rpc("mail_save_draft", {
+        p_token: sessionToken,
+        p_id: null,
+        p_to: to,
+        p_subject: subject,
+        p_body: body
+      });
+
+      showStatus("Koncept uložen.");
+
+      await showFolder("drafts");
+
+    } catch (error) {
+
+      showStatus(getError(error));
+    }
+  }
+
+
+  async function sendMail() {
+
+    const to =
+      $("composeTo").value.trim();
+
+    const subject =
+      $("composeSubject").value.trim();
+
+    const body =
+      $("composeBody").value;
+
+    if (!to) {
+      showStatus("Zadej příjemce.");
+      return;
+    }
+
+    try {
+
+      await rpc("mail_send", {
+        p_token: sessionToken,
+        p_to: to,
+        p_subject: subject,
+        p_body: body
+      });
+
+      showStatus("E-mail odeslán ✓");
+
+      await showFolder("sent");
+
+    } catch (error) {
+
+      showStatus(getError(error));
+    }
+  }
+
+
+  function formatDate(value) {
+
+    if (!value) return "";
+
+    const d = new Date(value);
+
+    if (Number.isNaN(d.getTime())) {
+      return "";
+    }
+
+    const now = new Date();
+
+    if (d.toDateString() === now.toDateString()) {
+
+      return d.toLocaleTimeString(
+        "cs-CZ",
+        {
+          hour: "2-digit",
+          minute: "2-digit"
+        }
+      );
+    }
+
+    return d.toLocaleDateString(
+      "cs-CZ",
+      {
+        day: "numeric",
+        month: "numeric"
+      }
+    );
+  }
+
+
+  function escapeHtml(value) {
+
+    return String(value ?? "")
+      .replaceAll("&", "&amp;")
+      .replaceAll("<", "&lt;")
+      .replaceAll(">", "&gt;")
+      .replaceAll('"', "&quot;")
+      .replaceAll("'", "&#039;");
+  }
+
+
+  checkSession();
+</script>
+
+</body>
+</html>
